@@ -28,7 +28,7 @@ jobs:
       # 3️⃣ session ファイルを復号
       - name: Restore Instaloader session
         run: |
-          echo "${{ secrets.INSTALOADER_SESSION }}" | base64 -D > session-atonofestival
+          echo "${{ secrets.INSTALOADER_SESSION }}" | base64 -d > session-atonofestival
 
       # 4️⃣ ダウンロード先作成
       - name: Create downloads folder
