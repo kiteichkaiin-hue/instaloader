@@ -1,48 +1,60 @@
-name: Instagram Monitor
+name: Instagram Monitor & Notify
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # 30分ごと
+    - cron: '*/30 * * * *'  # 30分ごと
   workflow_dispatch:
 
 jobs:
-  instagram:
+  fetch_instagram:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # 1️⃣ リポジトリをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Python & Instaloader
+      # 2️⃣ Python & Instaloader セットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Instaloader
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install instaloader
+          python -m pip install --upgrade pip
+          python -m pip install instaloader
 
-      - name: Prepare session file
+      # 3️⃣ session ファイルを復号
+      - name: Restore Instaloader session
         run: |
-          echo "${{ secrets.INSTALOADER_SESSION }}" | base64 --decode > session-atonofestival
-          ls -l session-atonofestival
+          echo "${{ secrets.INSTALOADER_SESSION }}" | base64 -D > session-atonofestival
 
+      # 4️⃣ ダウンロード先作成
+      - name: Create downloads folder
+        run: mkdir -p downloads/nakamu_sl
+
+      # 5️⃣ 投稿 & ストーリーを取得
       - name: Download posts and stories
         run: |
-          mkdir -p downloads
           python3 -m instaloader nakamu_sl \
             --stories \
-            --sessionfile ./session-atonofestival \
+            --sessionfile session-atonofestival \
             --latest-stamps stamps.txt \
-            --dirname-pattern downloads/{target}
+            --dirname-pattern downloads/{target} || echo "No new content"
 
-      - name: Detect updates
-        id: changes
+      # 6️⃣ Discord に画像付き通知
+      - name: Notify Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          ROLE_ID: 1338644043243978792
         run: |
-          if [ "$(ls -A downloads 2>/dev/null)" ]; then
-            echo "updated=true" >> $GITHUB_OUTPUT
+          FILES=$(find downloads/nakamu_sl -type f \( -name '*.jpg' -o -name '*.mp4' \) )
+          if [ -n "$FILES" ]; then
+            for FILE in $FILES; do
+              curl -F "content=<@&${ROLE_ID}> nakamu_sl has new content!" \
+                   -F "file=@${FILE}" \
+                   $DISCORD_WEBHOOK
+            done
           else
-            echo "updated=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Send Discord notification
-        if: steps.changes.outputs.updated == 'true'
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d '{"content":"<@&1338644043243978792> 📸 nakamu_sl updated\nhttps://instagram.com/nakamu_sl"}' \
-          ${{ secrets.DISCORD_WEBHOOK }}
+            echo "No new posts or stories"
