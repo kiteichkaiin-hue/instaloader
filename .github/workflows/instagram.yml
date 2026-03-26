@@ -15,20 +15,15 @@ jobs:
       - name: Install Instaloader
         run: pip install instaloader
 
-      - name: Create cookie file
-        run: |
-          echo "# Netscape HTTP Cookie File" > cookies.txt
-          echo ".instagram.com	TRUE	/	FALSE	2147483647	sessionid	${{ secrets.IG_SESSION }}" >> cookies.txt
-
-      - name: Download posts and stories
+      - name: Login and download
         run: |
           mkdir -p downloads
           instaloader nakamu_sl \
             --stories \
+            --login ${{ secrets.IG_LOGIN }} \
+            --password ${{ secrets.IG_PASSWORD }} \
             --latest-stamps stamps.txt \
-            --dirname-pattern downloads/{target} \
-            --cookiefile cookies.txt \
-            --login atonofestival
+            --dirname-pattern downloads/{target}
 
       - name: Detect updates
         id: changes
