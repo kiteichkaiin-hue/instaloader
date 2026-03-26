@@ -1,0 +1,30 @@
+name: Instagram Monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install
+        run: pip install instaloader
+
+      - name: Login
+        run: |
+          instaloader --login ${{ secrets.IG_LOGIN }} --password ${{ secrets.IG_PASSWORD }} --sessionfile session
+
+      - name: Check account
+        run: |
+          instaloader --sessionfile session --no-posts ${{ secrets.IG_LOGIN }}
+
+      - name: Notify
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d "{\"content\":\"Instagram checked\"}" \
+          ${{ secrets.DISCORD_WEBHOOK }}
