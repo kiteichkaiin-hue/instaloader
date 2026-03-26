@@ -43,18 +43,18 @@ jobs:
             --latest-stamps stamps.txt \
             --dirname-pattern downloads/{target} || echo "No new content"
 
-      # 6️⃣ Discord に画像付き通知
+      # 6️⃣ Discord に画像付き通知（安全版）
       - name: Notify Discord
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           ROLE_ID: 1338644043243978792
         run: |
-          FILES=$(find downloads/nakamu_sl -type f \( -name '*.jpg' -o -name '*.mp4' \) )
+          FILES=$(find downloads/nakamu_sl -type f \( -name '*.jpg' -o -name '*.mp4' \))
           if [ -n "$FILES" ]; then
-            for FILE in $FILES; do
+            while IFS= read -r FILE; do
               curl -F "content=<@&${ROLE_ID}> nakamu_sl has new content!" \
                    -F "file=@${FILE}" \
                    $DISCORD_WEBHOOK
-            done
+            done <<< "$FILES"
           else
             echo "No new posts or stories"
