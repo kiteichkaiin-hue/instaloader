@@ -25,12 +25,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install instaloader
 
-      # 3️⃣ session ファイルを復号
+      # 3️⃣ session ファイルを Secrets から復号
       - name: Restore Instaloader session
         run: |
           echo "${{ secrets.INSTALOADER_SESSION }}" | base64 -d > session-atonofestival
 
-      # 4️⃣ ダウンロード先作成
+      # 4️⃣ ダウンロード先フォルダ作成
       - name: Create downloads folder
         run: mkdir -p downloads/nakamu_sl
 
@@ -43,7 +43,7 @@ jobs:
             --latest-stamps stamps.txt \
             --dirname-pattern downloads/{target} || echo "No new content"
 
-      # 6️⃣ Discord に画像付き通知（安全版）
+      # 6️⃣ Discord に通知（安全版）
       - name: Notify Discord
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -58,3 +58,5 @@ jobs:
             done <<< "$FILES"
           else
             echo "No new posts or stories"
+            fi
+            
