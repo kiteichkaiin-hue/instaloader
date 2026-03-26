@@ -6,24 +6,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  instagram:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Instaloader
+      - name: Install
         run: pip install instaloader
 
-      - name: Login and fetch
+      - name: Login
         run: |
-          instaloader \
-          --login=${{ secrets.IG_LOGIN }} \
-          --password=${{ secrets.IG_PASSWORD }} \
-          nakamu_sl
+          instaloader --login=${{ secrets.IG_LOGIN }} --password=${{ secrets.IG_PASSWORD }}
 
-      - name: Send Discord message
+      - name: Download latest
+        run: |
+          instaloader nakamu_sl --stories --latest-stamps stamps.txt
+
+      - name: Notify Discord
+        if: success()
         run: |
           curl -H "Content-Type: application/json" \
-          -d '{"content":"Instagram check ran successfully"}' \
+          -d '{"content":"📸 nakamu_sl updated (post or story) https://instagram.com/nakamu_sl"}' \
           ${{ secrets.DISCORD_WEBHOOK }}
