@@ -10,18 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Instaloader
         run: pip install instaloader
 
-      - name: Create cookies file
+      - name: Create cookie file
         run: |
           echo "# Netscape HTTP Cookie File" > cookies.txt
-          echo ".instagram.com TRUE / TRUE 0 sessionid ${{ secrets.IG_SESSION }}" >> cookies.txt
+          echo ".instagram.com	TRUE	/	FALSE	2147483647	sessionid	${{ secrets.IG_SESSION }}" >> cookies.txt
 
-      - name: Download latest posts and stories
+      - name: Check login
+        run: |
+          instaloader --cookiefile cookies.txt --login atonofestival --no-download
+
+      - name: Download posts and stories
         run: |
           mkdir -p downloads
           instaloader nakamu_sl \
@@ -43,5 +46,5 @@ jobs:
         if: steps.changes.outputs.updated == 'true'
         run: |
           curl -H "Content-Type: application/json" \
-          -d '{"content":"<@&1338644043243978792> 📸 nakamu_sl posted new Instagram content\nhttps://instagram.com/nakamu_sl"}' \
+          -d '{"content":"<@&1338644043243978792> 📸 nakamu_sl updated\nhttps://instagram.com/nakamu_sl"}' \
           ${{ secrets.DISCORD_WEBHOOK }}
