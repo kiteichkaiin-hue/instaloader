@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install Instaloader
@@ -21,12 +21,16 @@ jobs:
         run: |
           instaloader --login ${{ secrets.IG_LOGIN }} --password ${{ secrets.IG_PASSWORD }}
 
-      - name: Download latest posts and stories
+      - name: Download latest content
         run: |
-          instaloader nakamu_sl --stories --no-video-thumbnails --no-captions --no-metadata-json
+          mkdir downloads
+          instaloader nakamu_sl \
+          --stories \
+          --latest-stamps stamps.txt \
+          --dirname-pattern downloads/{target}
 
       - name: Send Discord notification
         run: |
           curl -H "Content-Type: application/json" \
-          -d '{"content":"📸 Instagram activity detected: https://instagram.com/nakamu_sl"}' \
+          -d '{"content":"📸 nakamu_sl updated (post or story)\nhttps://instagram.com/nakamu_sl"}' \
           ${{ secrets.DISCORD_WEBHOOK }}
