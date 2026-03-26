@@ -16,31 +16,19 @@ jobs:
       - name: Install Instaloader
         run: pip install instaloader
 
-      - name: Restore stamps
-        uses: actions/cache@v4
-        with:
-          path: stamps.txt
-          key: stamps-cache
-
-      - name: Create stamps file if missing
+      - name: Create cookies file
         run: |
-          if [ ! -f stamps.txt ]; then
-            touch stamps.txt
-          fi
+          echo "# Netscape HTTP Cookie File" > cookies.txt
+          echo ".instagram.com	TRUE	/	TRUE	0	sessionid	${{ secrets.IG_SESSION }}" >> cookies.txt
 
-      - name: Create session file
-        run: |
-          echo "${{ secrets.IG_SESSION }}" > sessionid.txt
-
-      - name: Download latest content
-        id: insta
+      - name: Download latest posts and stories
         run: |
           mkdir -p downloads
           instaloader nakamu_sl \
             --stories \
             --latest-stamps stamps.txt \
             --dirname-pattern downloads/{target} \
-            --sessionfile sessionid.txt
+            --cookiefile cookies.txt
 
       - name: Detect updates
         id: changes
