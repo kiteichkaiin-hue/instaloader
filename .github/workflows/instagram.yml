@@ -20,10 +20,6 @@ jobs:
           echo "# Netscape HTTP Cookie File" > cookies.txt
           echo ".instagram.com	TRUE	/	FALSE	2147483647	sessionid	${{ secrets.IG_SESSION }}" >> cookies.txt
 
-      - name: Check login
-        run: |
-          instaloader --cookiefile cookies.txt --login atonofestival --no-download
-
       - name: Download posts and stories
         run: |
           mkdir -p downloads
@@ -31,7 +27,8 @@ jobs:
             --stories \
             --latest-stamps stamps.txt \
             --dirname-pattern downloads/{target} \
-            --cookiefile cookies.txt
+            --cookiefile cookies.txt \
+            --login atonofestival
 
       - name: Detect updates
         id: changes
