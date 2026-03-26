@@ -12,19 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install
+      - name: Install Instaloader
         run: pip install instaloader
 
-      - name: Login
+      - name: Login and fetch
         run: |
-          instaloader --login ${{ secrets.IG_LOGIN }} --password ${{ secrets.IG_PASSWORD }} --sessionfile session
+          instaloader \
+          --login=${{ secrets.IG_LOGIN }} \
+          --password=${{ secrets.IG_PASSWORD }} \
+          nakamu_sl
 
-      - name: Check account
-        run: |
-          instaloader --sessionfile session --no-posts ${{ secrets.IG_LOGIN }}
-
-      - name: Notify
+      - name: Send Discord message
         run: |
           curl -H "Content-Type: application/json" \
-          -d "{\"content\":\"Instagram checked\"}" \
+          -d '{"content":"Instagram check ran successfully"}' \
           ${{ secrets.DISCORD_WEBHOOK }}
