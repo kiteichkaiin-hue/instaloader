@@ -26,7 +26,7 @@ jobs:
           mkdir -p downloads
           python3 -m instaloader nakamu_sl \
             --stories \
-            --sessionfile session-atonofestival \
+            --sessionfile ./session-atonofestival \
             --latest-stamps stamps.txt \
             --dirname-pattern downloads/{target}
 
