@@ -14,23 +14,46 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Instaloader
-        run: |
-          pip install instaloader
+        run: pip install instaloader
 
-      - name: Login to Instagram
+      - name: Restore stamps
+        uses: actions/cache@v4
+        with:
+          path: stamps.txt
+          key: stamps-cache
+
+      - name: Create stamps file if missing
         run: |
-          instaloader --login ${{ secrets.IG_LOGIN }} --password ${{ secrets.IG_PASSWORD }}
+          if [ ! -f stamps.txt ]; then
+            touch stamps.txt
+          fi
+
+      - name: Create session file
+        run: |
+          echo "${{ secrets.IG_SESSION }}" > sessionid.txt
 
       - name: Download latest content
+        id: insta
         run: |
-          mkdir downloads
+          mkdir -p downloads
           instaloader nakamu_sl \
-          --stories \
-          --latest-stamps stamps.txt \
-          --dirname-pattern downloads/{target}
+            --stories \
+            --latest-stamps stamps.txt \
+            --dirname-pattern downloads/{target} \
+            --sessionfile sessionid.txt
+
+      - name: Detect updates
+        id: changes
+        run: |
+          if [ "$(ls -A downloads 2>/dev/null)" ]; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Send Discord notification
+        if: steps.changes.outputs.updated == 'true'
         run: |
           curl -H "Content-Type: application/json" \
-          -d '{"content":"📸 nakamu_sl updated (post or story)\nhttps://instagram.com/nakamu_sl"}' \
+          -d '{"content":"<@&1338644043243978792> 📸 nakamu_sl updated (post or story)\nhttps://instagram.com/nakamu_sl"}' \
           ${{ secrets.DISCORD_WEBHOOK }}
