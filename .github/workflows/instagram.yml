@@ -2,6 +2,7 @@ name: Instagram Monitor
 
 on:
   schedule:
+    # 30分ごとにチェック
     - cron: "*/30 * * * *"
   workflow_dispatch:
 
@@ -10,20 +11,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # コードを取得
       - uses: actions/checkout@v4
 
-      - name: Install Instaloader
-        run: pip install instaloader
+      # Python と Instaloader をインストール
+      - name: Setup Python & Instaloader
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install instaloader
 
+      # 投稿・ストーリーのダウンロード
       - name: Download posts and stories
         run: |
           mkdir -p downloads
-          instaloader nakamu_sl \
+          python3 -m instaloader nakamu_sl \
             --stories \
             --sessionfile session-atonofestival \
             --latest-stamps stamps.txt \
             --dirname-pattern downloads/{target}
 
+      # 変更があったか判定
       - name: Detect updates
         id: changes
         run: |
@@ -33,6 +40,7 @@ jobs:
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
 
+      # Discordに通知（特定ロールにメンション）
       - name: Send Discord notification
         if: steps.changes.outputs.updated == 'true'
         run: |
